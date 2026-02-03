@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieval Booster - 安定リレー版</title>
+    <title>Retrieval Booster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap' );
         body {
             font-family: 'Noto Sans JP', sans-serif;
             background-color: #f8fafc;
@@ -54,16 +54,13 @@
                     <button onclick="clearText()" class="text-[10px] font-bold text-red-400 hover:text-red-600 px-2 py-1 hover:bg-red-50 rounded transition-colors">全クリア</button>
                 </div>
 
-                <!-- 編集可能なテキストエリア -->
                 <textarea id="transcript-area" class="w-full h-[200px] p-4 bg-slate-50 border border-slate-100 rounded-xl text-base leading-7 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="ここに文字起こしが表示されます"></textarea>
                 
-                <!-- リアルタイム・プレビュー (Interim) -->
                 <div id="interim-overlay" class="absolute bottom-5 left-5 right-5 text-sm text-indigo-500 font-medium opacity-0 transition-opacity pointer-events-none bg-white/95 p-2 rounded shadow-sm truncate border border-indigo-100">
                     ...
                 </div>
             </div>
 
-            <!-- Mic Control -->
             <div class="flex flex-col items-center justify-center -mt-6 relative z-20 gap-3">
                 <button id="mic-btn" class="w-16 h-16 rounded-full bg-indigo-600 text-white shadow-xl flex items-center justify-center transition-all active:scale-95 border-4 border-white">
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
@@ -73,11 +70,17 @@
 
             <!-- AI Action -->
             <div class="pt-4 border-t border-slate-200 space-y-4">
+                <!-- ★★★ APIキー入力欄を追加 ★★★ -->
+                <div class="space-y-2 pb-2">
+                    <label for="api-key-input" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Google AI API Key</label>
+                    <input type="password" id="api-key-input" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ここにGoogle AIのAPIキーを貼り付け">
+                    <p class="text-[10px] text-slate-400">APIキーはブラウザ内にのみ保存されます 。</p>
+                </div>
+
                 <button id="ai-process-btn" onclick="processAI()" disabled class="w-full py-4 bg-slate-800 text-white font-bold rounded-2xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group">
                     <span class="group-hover:scale-105 transition-transform">AIで清書してノートを作成</span>
                 </button>
                 
-                <!-- AI Output -->
                 <div id="ai-preview" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-2">
                     <div class="flex items-center gap-2">
                         <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
@@ -88,13 +91,12 @@
                 </div>
             </div>
 
-            <!-- Saved Notes List -->
             <div class="space-y-3 pt-6 border-t border-slate-200">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-700">保存済みノート</h3>
                     <button onclick="exportNotes()" class="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        ファイル書き出し(JSON)
+                        ファイル書き出し(JSON )
                     </button>
                 </div>
                 <div id="notes-list" class="space-y-3"></div>
@@ -133,7 +135,6 @@
 
     </main>
 
-    <!-- Overlay -->
     <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex flex-col items-center justify-center text-white gap-3">
         <div class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
         <p class="text-xs font-bold uppercase tracking-widest">AI Processing...</p>
@@ -141,18 +142,17 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-full shadow-2xl opacity-0 transition-all pointer-events-none z-[100] whitespace-nowrap">Notification</div>
 
     <script>
-        const apiKey = "AIzaSyDSZ60f5kbAHo4xHr0F9SXSQ16D7YXbPX8";
+        // ★★★ APIキーの直接記述を削除 ★★★
         
-        // --- Local Storage Keys ---
         const NOTES_KEY = 'rb_relay_notes_v2';
         const QUIZZES_KEY = 'rb_relay_quizzes_v2';
+        const API_KEY_STORAGE_KEY = 'google_ai_api_key'; // ★★★ キー保存用の名前を追加 ★★★
         
         let notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
         let quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]');
         let currentIdx = -1;
         let isRecording = false;
 
-        // --- Speech Recognition (Stabilized Relay Mode) ---
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let rec = null;
         let currentSessionText = ""; 
@@ -160,7 +160,6 @@
         if (SpeechRec) {
             rec = new SpeechRec();
             rec.lang = 'ja-JP';
-            // 【重要】単発モード。ブラウザの重複バグを物理的に回避
             rec.continuous = false; 
             rec.interimResults = true;
 
@@ -191,30 +190,24 @@
             };
 
             rec.onend = () => {
-                // セッション終了処理
                 if (currentSessionText.trim()) {
                     appendToMainArea(currentSessionText);
                     currentSessionText = ""; 
                 }
                 
-                // 【最重要修正点】
-                // 即座に再開するのではなく、300msのクールダウン（休憩）を入れる。
-                // これにより、ブラウザの音声認識エンジンがリセットされる時間を稼ぎ、
-                // 10回、20回と続いても「詰まる」現象を防ぐ。
                 if (isRecording) {
-                    updateMicStatus("Refreshing..."); // UIで更新中であることを示す
+                    updateMicStatus("Refreshing...");
                     setTimeout(() => {
                         if (isRecording) {
                             try { 
                                 rec.start(); 
-                                updateMicUI(true); // ステータスをRecordingに戻す
+                                updateMicUI(true);
                             } catch(e) {
                                 console.error("Restart error:", e);
-                                // 失敗しても諦めずにもう一度だけトライ
                                 setTimeout(() => { if(isRecording) try{rec.start()}catch(e){} }, 1000);
                             }
                         }
-                    }, 300); // 300msの待機
+                    }, 300);
                 } else {
                     updateMicUI(false);
                     document.getElementById('interim-overlay').classList.add('opacity-0');
@@ -223,11 +216,7 @@
             
             rec.onerror = (e) => {
                 console.error("Mic Error:", e.error);
-                if (e.error === 'no-speech') {
-                    // 無音エラーの場合は、録音中なら無視して再開フローへ（onendが呼ばれる）
-                    return; 
-                }
-                // 重大なエラーの時は一旦止める
+                if (e.error === 'no-speech') { return; }
                 stopRec();
                 toast("エラー: " + e.error);
             };
@@ -241,7 +230,6 @@
             document.getElementById('ai-process-btn').disabled = false;
         }
 
-        // --- Controls ---
         const micBtn = document.getElementById('mic-btn');
         micBtn.onclick = () => {
             if(!rec) return toast("このブラウザは対応していません");
@@ -288,20 +276,13 @@
             document.getElementById('ai-process-btn').disabled = true;
         }
 
-        // --- AI: Clean & Edit ---
         async function processAI() {
             const rawText = document.getElementById('transcript-area').value;
             if (rawText.length < 2) return toast("テキストが短すぎます");
             
             setLoading(true);
 
-            const systemPrompt = `あなたは優秀な編集者です。
-            入力された「話し言葉のメモ」を、学習用の「読みやすい箇条書きノート」に清書（リライト）してください。
-            【編集ルール】
-            1. フィラー削除。
-            2. 話し言葉を断定的な書き言葉に変換。
-            3. 元のメモにない情報は追加しない。
-            4. 重複内容はまとめる。`;
+            const systemPrompt = `あなたは優秀な編集者です。入力された「話し言葉のメモ」を、学習用の「読みやすい箇条書きノート」に清書（リライト）してください。【編集ルール】1. フィラー削除。2. 話し言葉を断定的な書き言葉に変換。3. 元のメモにない情報は追加しない。4. 重複内容はまとめる。`;
 
             try {
                 const res = await callAI(rawText, systemPrompt);
@@ -310,7 +291,8 @@
                 setTimeout(() => document.getElementById('ai-preview').scrollIntoView({behavior:'smooth'}), 100);
                 toast("編集完了");
             } catch (e) {
-                toast("AIエラーが発生しました");
+                console.error(e);
+                // toast("AIエラーが発生しました"); // callAI内でtoast表示するので不要
             } finally {
                 setLoading(false);
             }
@@ -319,9 +301,7 @@
         async function generateQuizzes() {
             if (notes.length === 0) return toast("ノートがありません");
             setLoading(true);
-            const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。
-            JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] }
-            - 事実に基づいた問題。日本語出力。`;
+            const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] } - 事実に基づいた問題。日本語出力。`;
             const content = notes.map(n => n.content).join("\n---\n");
 
             try {
@@ -332,29 +312,46 @@
                 initQuiz();
                 toast("クイズを更新しました");
             } catch (e) {
-                toast("生成エラー");
+                console.error(e);
+                // toast("生成エラー"); // callAI内でtoast表示するので不要
             } finally {
                 setLoading(false);
             }
         }
 
+        // ★★★ APIキーを取得してAIを呼び出すように修正 ★★★
         async function callAI(prompt, system, mime = "text/plain") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const userApiKey = document.getElementById('api-key-input').value;
+            if (!userApiKey) {
+                toast("APIキーが入力されていません");
+                throw new Error("API Key is missing");
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`;
             const body = {
                 contents: [{ parts: [{ text: prompt }] }],
                 systemInstruction: { parts: [{ text: system }] },
                 generationConfig: { responseMimeType: mime }
             };
-            const r = await fetchWithRetry(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const d = await r.json();
-            return d.candidates[0].content.parts[0].text;
+            try {
+                const r = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body )
+                });
+                const d = await r.json();
+                if(d.error) {
+                    console.error("API Error:", d.error.message);
+                    toast(`APIエラー: ${d.error.message}`);
+                    throw new Error(d.error.message);
+                }
+                return d.candidates[0].content.parts[0].text;
+            } catch (e) {
+                toast("通信エラーが発生しました");
+                throw e;
+            }
         }
 
-        // --- Data Management (Local & Export) ---
         function saveFinalNote() {
             const content = document.getElementById('ai-result').value.trim();
             if (!content) return;
@@ -386,7 +383,7 @@
                     </div>
                     <p class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${n.content}</p>
                 `;
-                list.appendChild(d);
+                list.appendChild(d );
             });
         }
 
@@ -397,22 +394,13 @@
             renderNotes();
         }
 
-        // --- Export Feature ---
         function exportNotes() {
             if (notes.length === 0) return toast("書き出すデータがありません");
-            
-            // JSONデータを作成
             const dataStr = JSON.stringify(notes, null, 2);
             const blob = new Blob([dataStr], {type: "application/json"});
-            
-            // ファイル名に日付をつける
             const date = new Date();
-            const dateStr = date.getFullYear() + 
-                            ('0' + (date.getMonth() + 1)).slice(-2) + 
-                            ('0' + date.getDate()).slice(-2);
+            const dateStr = date.getFullYear() + ('0' + (date.getMonth() + 1)).slice(-2) + ('0' + date.getDate()).slice(-2);
             const fileName = `retrieval_booster_notes_${dateStr}.json`;
-
-            // ダウンロードリンクを作成してクリック
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -421,11 +409,9 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
             toast("ファイルを保存しました");
         }
 
-        // --- Quiz Logic ---
         function initQuiz() {
             const active = document.getElementById('quiz-content');
             const empty = document.getElementById('quiz-empty');
@@ -481,7 +467,7 @@
         function setLoading(s) { document.getElementById('loader').classList.toggle('hidden', !s); }
         function toast(m) {
             const t = document.getElementById('toast');
-            t.textContent = m;
+t.textContent = m;
             t.classList.replace('opacity-0', 'opacity-100');
             setTimeout(() => t.classList.replace('opacity-100', 'opacity-0'), 2500);
         }
@@ -497,7 +483,16 @@
             }
         }
 
-        window.onload = () => renderNotes();
+        // ★★★ ページ読み込み時にAPIキーを読み込む処理を追加 ★★★
+        window.onload = () => {
+            const apiKeyInput = document.getElementById('api-key-input');
+            apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+            apiKeyInput.onchange = () => {
+                localStorage.setItem(API_KEY_STORAGE_KEY, apiKeyInput.value);
+                toast("APIキーを保存しました");
+            };
+            renderNotes();
+        };
     </script>
 </body>
 </html>
