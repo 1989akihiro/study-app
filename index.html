@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieval Booster</title>
+    <title>Retrieval Booster - 編集機能付き</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap' );
@@ -26,7 +26,6 @@
 </head>
 <body class="min-h-screen text-slate-800 pb-24">
 
-    <!-- Header -->
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
         <div class="max-w-md mx-auto px-5 py-4 flex justify-between items-center">
             <h1 class="text-lg font-black text-slate-700 tracking-tight flex items-center gap-2">
@@ -38,23 +37,21 @@
 
     <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
         
-        <!-- Tab Navigation -->
         <div class="grid grid-cols-2 p-1 bg-slate-200 rounded-xl gap-1">
             <button onclick="switchTab('input')" id="tab-input" class="py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-900 transition-all">録音・編集</button>
             <button onclick="switchTab('quiz')" id="tab-quiz" class="py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all">クイズ練習</button>
         </div>
 
-        <!-- Section: Recording -->
         <section id="section-input" class="space-y-4">
             
-            <!-- Transcript Area -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 relative overflow-hidden">
                 <div class="flex justify-between items-center z-10 relative">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transcript Log</label>
                     <button onclick="clearText()" class="text-[10px] font-bold text-red-400 hover:text-red-600 px-2 py-1 hover:bg-red-50 rounded transition-colors">全クリア</button>
                 </div>
 
-                <textarea id="transcript-area" class="w-full h-[200px] p-4 bg-slate-50 border border-slate-100 rounded-xl text-base leading-7 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="ここに文字起こしが表示されます"></textarea>
+                <!-- ★★★ oninputイベントを追加 ★★★ -->
+                <textarea id="transcript-area" oninput="handleTextInput()" class="w-full h-[200px] p-4 bg-slate-50 border border-slate-100 rounded-xl text-base leading-7 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-none" placeholder="ここに文字起こしが表示されます"></textarea>
                 
                 <div id="interim-overlay" class="absolute bottom-5 left-5 right-5 text-sm text-indigo-500 font-medium opacity-0 transition-opacity pointer-events-none bg-white/95 p-2 rounded shadow-sm truncate border border-indigo-100">
                     ...
@@ -68,9 +65,7 @@
                 <p id="mic-status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tap to Record</p>
             </div>
 
-            <!-- AI Action -->
             <div class="pt-4 border-t border-slate-200 space-y-4">
-                <!-- ★★★ APIキー入力欄を追加 ★★★ -->
                 <div class="space-y-2 pb-2">
                     <label for="api-key-input" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Google AI API Key</label>
                     <input type="password" id="api-key-input" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ここにGoogle AIのAPIキーを貼り付け">
@@ -103,7 +98,6 @@
             </div>
         </section>
 
-        <!-- Section: Quiz -->
         <section id="section-quiz" class="hidden space-y-5">
             <div class="bg-gradient-to-br from-indigo-600 to-violet-600 p-6 rounded-3xl text-white shadow-lg">
                 <h2 class="font-bold text-lg">リトリーバル・クイズ</h2>
@@ -141,17 +135,28 @@
     </div>
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-full shadow-2xl opacity-0 transition-all pointer-events-none z-[100] whitespace-nowrap">Notification</div>
 
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+            <h3 class="font-bold text-lg text-slate-800">ノートを編集</h3>
+            <textarea id="edit-textarea" class="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-xl text-base leading-7 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none resize-y"></textarea>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeEditModal()" class="py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-200 transition-colors">キャンセル</button>
+                <button onclick="updateNote()" class="py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm shadow hover:bg-indigo-700 transition-colors">変更を保存</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        // ★★★ APIキーの直接記述を削除 ★★★
-        
         const NOTES_KEY = 'rb_relay_notes_v2';
         const QUIZZES_KEY = 'rb_relay_quizzes_v2';
-        const API_KEY_STORAGE_KEY = 'google_ai_api_key'; // ★★★ キー保存用の名前を追加 ★★★
+        const API_KEY_STORAGE_KEY = 'google_ai_api_key';
         
         let notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
         let quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]');
         let currentIdx = -1;
         let isRecording = false;
+        let noteIdToEdit = null;
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let rec = null;
@@ -164,22 +169,12 @@
             rec.interimResults = true;
 
             rec.onresult = (event) => {
-                let interim = "";
-                let finalTrans = "";
-
+                let interim = "", finalTrans = "";
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     const t = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTrans += t;
-                    } else {
-                        interim += t;
-                    }
+                    if (event.results[i].isFinal) { finalTrans += t; } else { interim += t; }
                 }
-
-                if (finalTrans) {
-                    currentSessionText += finalTrans;
-                }
-
+                if (finalTrans) { currentSessionText += finalTrans; }
                 const overlay = document.getElementById('interim-overlay');
                 if (interim) {
                     overlay.textContent = interim;
@@ -194,18 +189,11 @@
                     appendToMainArea(currentSessionText);
                     currentSessionText = ""; 
                 }
-                
                 if (isRecording) {
                     updateMicStatus("Refreshing...");
                     setTimeout(() => {
                         if (isRecording) {
-                            try { 
-                                rec.start(); 
-                                updateMicUI(true);
-                            } catch(e) {
-                                console.error("Restart error:", e);
-                                setTimeout(() => { if(isRecording) try{rec.start()}catch(e){} }, 1000);
-                            }
+                            try { rec.start(); updateMicUI(true); } catch(e) { console.error("Restart error:", e); }
                         }
                     }, 300);
                 } else {
@@ -227,7 +215,7 @@
             const prefix = (area.value && !area.value.match(/[\n。、]$/)) ? " " : "";
             area.value += prefix + text;
             area.scrollTop = area.scrollHeight;
-            document.getElementById('ai-process-btn').disabled = false;
+            handleTextInput(); // ★★★ 音声入力後もボタン状態を更新 ★★★
         }
 
         const micBtn = document.getElementById('mic-btn');
@@ -251,7 +239,6 @@
 
         function updateMicUI(active) {
             const status = document.getElementById('mic-status');
-            
             if (active) {
                 micBtn.classList.add('mic-active');
                 status.textContent = "Recording...";
@@ -269,33 +256,32 @@
              status.className = "text-[10px] font-bold text-indigo-400 uppercase tracking-widest";
         }
 
+        // ★★★ clearText関数を修正 ★★★
         function clearText() {
             document.getElementById('transcript-area').value = "";
             document.getElementById('ai-result').value = "";
             document.getElementById('ai-preview').classList.add('hidden');
-            document.getElementById('ai-process-btn').disabled = true;
+            handleTextInput(); // ボタンの状態を更新
+        }
+
+        // ★★★ テキスト入力でボタンを制御する関数を追加 ★★★
+        function handleTextInput() {
+            const hasText = document.getElementById('transcript-area').value.trim().length > 0;
+            document.getElementById('ai-process-btn').disabled = !hasText;
         }
 
         async function processAI() {
             const rawText = document.getElementById('transcript-area').value;
             if (rawText.length < 2) return toast("テキストが短すぎます");
-            
             setLoading(true);
-
             const systemPrompt = `あなたは優秀な編集者です。入力された「話し言葉のメモ」を、学習用の「読みやすい箇条書きノート」に清書（リライト）してください。【編集ルール】1. フィラー削除。2. 話し言葉を断定的な書き言葉に変換。3. 元のメモにない情報は追加しない。4. 重複内容はまとめる。`;
-
             try {
                 const res = await callAI(rawText, systemPrompt);
                 document.getElementById('ai-result').value = res.trim();
                 document.getElementById('ai-preview').classList.remove('hidden');
                 setTimeout(() => document.getElementById('ai-preview').scrollIntoView({behavior:'smooth'}), 100);
                 toast("編集完了");
-            } catch (e) {
-                console.error(e);
-                // toast("AIエラーが発生しました"); // callAI内でtoast表示するので不要
-            } finally {
-                setLoading(false);
-            }
+            } catch (e) { console.error(e); } finally { setLoading(false); }
         }
 
         async function generateQuizzes() {
@@ -303,7 +289,6 @@
             setLoading(true);
             const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] } - 事実に基づいた問題。日本語出力。`;
             const content = notes.map(n => n.content).join("\n---\n");
-
             try {
                 const res = await callAI(content, sys, "application/json");
                 const data = JSON.parse(res);
@@ -311,22 +296,15 @@
                 localStorage.setItem(QUIZZES_KEY, JSON.stringify(quizzes));
                 initQuiz();
                 toast("クイズを更新しました");
-            } catch (e) {
-                console.error(e);
-                // toast("生成エラー"); // callAI内でtoast表示するので不要
-            } finally {
-                setLoading(false);
-            }
+            } catch (e) { console.error(e); } finally { setLoading(false); }
         }
 
-        // ★★★ APIキーを取得してAIを呼び出すように修正 ★★★
         async function callAI(prompt, system, mime = "text/plain") {
             const userApiKey = document.getElementById('api-key-input').value;
             if (!userApiKey) {
                 toast("APIキーが入力されていません");
                 throw new Error("API Key is missing");
             }
-
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userApiKey}`;
             const body = {
                 contents: [{ parts: [{ text: prompt }] }],
@@ -334,11 +312,7 @@
                 generationConfig: { responseMimeType: mime }
             };
             try {
-                const r = await fetchWithRetry(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body )
-                });
+                const r = await fetchWithRetry(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ) });
                 const d = await r.json();
                 if(d.error) {
                     console.error("API Error:", d.error.message);
@@ -377,9 +351,16 @@
                 const d = document.createElement('div');
                 d.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative";
                 d.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
+                    <div class="flex justify-between items-start mb-1">
                         <span class="text-[9px] font-black text-slate-300 uppercase">${n.date}</span>
-                        <button onclick="delNote(${n.id})" class="text-slate-300 hover:text-red-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal(${n.id})" class="text-slate-300 hover:text-indigo-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                            </button>
+                            <button onclick="delNote(${n.id} )" class="text-slate-300 hover:text-red-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
                     </div>
                     <p class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${n.content}</p>
                 `;
@@ -388,10 +369,42 @@
         }
 
         function delNote(id) {
-            if(!confirm("削除しますか？")) return;
+            if(!confirm("このノートを削除しますか？")) return;
             notes = notes.filter(n => n.id !== id);
             localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
             renderNotes();
+            toast("ノートを削除しました");
+        }
+
+        function openEditModal(id) {
+            noteIdToEdit = id;
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                document.getElementById('edit-textarea').value = note.content;
+                document.getElementById('edit-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            noteIdToEdit = null;
+        }
+
+        function updateNote() {
+            if (noteIdToEdit === null) return;
+            
+            const newContent = document.getElementById('edit-textarea').value.trim();
+            const noteIndex = notes.findIndex(n => n.id === noteIdToEdit);
+
+            if (noteIndex > -1 && newContent) {
+                notes[noteIndex].content = newContent;
+                localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+                renderNotes();
+                toast("ノートを更新しました");
+                closeEditModal();
+            } else if (!newContent) {
+                toast("内容が空です");
+            }
         }
 
         function exportNotes() {
@@ -452,8 +465,7 @@
             const isInput = t === 'input';
             document.getElementById('section-input').classList.toggle('hidden', !isInput);
             document.getElementById('section-quiz').classList.toggle('hidden', isInput);
-            const b1 = document.getElementById('tab-input');
-            const b2 = document.getElementById('tab-quiz');
+            const b1 = document.getElementById('tab-input'), b2 = document.getElementById('tab-quiz');
             if (isInput) {
                 b1.className = "py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-900 transition-all flex-1";
                 b2.className = "py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all flex-1";
@@ -467,7 +479,7 @@
         function setLoading(s) { document.getElementById('loader').classList.toggle('hidden', !s); }
         function toast(m) {
             const t = document.getElementById('toast');
-t.textContent = m;
+            t.textContent = m;
             t.classList.replace('opacity-0', 'opacity-100');
             setTimeout(() => t.classList.replace('opacity-100', 'opacity-0'), 2500);
         }
@@ -483,7 +495,6 @@ t.textContent = m;
             }
         }
 
-        // ★★★ ページ読み込み時にAPIキーを読み込む処理を追加 ★★★
         window.onload = () => {
             const apiKeyInput = document.getElementById('api-key-input');
             apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
@@ -492,6 +503,7 @@ t.textContent = m;
                 toast("APIキーを保存しました");
             };
             renderNotes();
+            handleTextInput(); // ★★★ ページ読み込み時にもボタン状態をチェック ★★★
         };
     </script>
 </body>
