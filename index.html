@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieval Booster - チャンネル拡張版</title>
+    <title>Retrieval Booster - インポート機能付き</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap' );
         body {
             font-family: 'Noto Sans JP', sans-serif;
             background-color: #f8fafc;
@@ -26,7 +26,7 @@
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E" );
             background-repeat: no-repeat;
             background-position: right 0.5rem center;
             background-size: 1em;
@@ -41,11 +41,7 @@
             <h1 class="text-lg font-black text-slate-700 tracking-tight flex items-center gap-2">
                 Retrieval Booster
             </h1>
-            <div class="flex gap-2">
-                <button onclick="openSettings()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-            </div>
+            <div id="status-badge" class="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-400 uppercase tracking-widest">Local</div>
         </div>
     </header>
 
@@ -79,6 +75,12 @@
             </div>
 
             <div class="pt-4 border-t border-slate-200 space-y-4">
+                <div class="space-y-2 pb-2">
+                    <label for="api-key-input" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Google AI API Key</label>
+                    <input type="password" id="api-key-input" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ここにGoogle AIのAPIキーを貼り付け">
+                    <p class="text-[10px] text-slate-400">APIキーはブラウザ内にのみ保存されます 。</p>
+                </div>
+
                 <button id="ai-process-btn" onclick="processAI()" disabled class="w-full py-4 bg-slate-800 text-white font-bold rounded-2xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group">
                     <span class="group-hover:scale-105 transition-transform">AIで清書してノートを作成</span>
                 </button>
@@ -96,9 +98,25 @@
             <div class="space-y-3 pt-6 border-t border-slate-200">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-700">保存済みノート</h3>
-                    <select id="channel-select" onchange="handleChannelChange()" class="text-xs font-bold bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none min-w-[120px]">
-                        <!-- JavaScriptで動的に生成 -->
+                    <select id="channel-select" onchange="handleChannelChange()" class="text-xs font-bold bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="1">チャンネル 1 (趣味)</option>
+                        <option value="2">チャンネル 2 (仕事)</option>
+                        <option value="3">チャンネル 3 (学習)</option>
+                        <option value="4">チャンネル 4</option>
+                        <option value="5">チャンネル 5</option>
                     </select>
+                </div>
+                <!-- ★★★ インポート/エクスポートUIを修正 ★★★ -->
+                <div class="flex items-center gap-2">
+                    <button onclick="importNotes()" class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        ファイル読み込み (JSON )
+                    </button>
+                    <button onclick="exportNotes()" class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        ファイル書き出し (JSON )
+                    </button>
+                    <input type="file" id="file-importer" class="hidden" accept=".json" onchange="handleFileSelect(event)">
                 </div>
                 <div id="notes-list" class="space-y-3"></div>
             </div>
@@ -131,66 +149,11 @@
 
     </main>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-lg text-slate-800">設定</h3>
-                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-            </div>
-
-            <div class="space-y-4">
-                <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Google AI API Key</label>
-                    <input type="password" id="api-key-input" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="APIキーを入力">
-                </div>
-
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">チャンネル設定</label>
-                        <button onclick="addNewChannel()" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800">+ チャンネル追加</button>
-                    </div>
-                    <div id="channel-names-config" class="space-y-2">
-                        <!-- JavaScriptで生成 -->
-                    </div>
-                </div>
-
-                <div class="pt-4 border-t border-slate-100 space-y-3">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">データの管理</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportNotes()" class="py-2.5 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            書き出し
-                        </button>
-                        <button onclick="document.getElementById('import-input').click()" class="py-2.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            読み込み
-                        </button>
-                        <input type="file" id="import-input" class="hidden" accept=".json" onchange="handleImportFile(event)">
-                    </div>
-                </div>
-            </div>
-            
-            <button onclick="saveSettings()" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700 transition-colors">設定を保存</button>
-        </div>
+    <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex flex-col items-center justify-center text-white gap-3">
+        <div class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-bold uppercase tracking-widest">AI Processing...</p>
     </div>
-
-    <!-- Import Modal -->
-    <div id="import-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
-            <h3 class="font-bold text-lg text-slate-800">データを読み込む</h3>
-            <p class="text-xs text-slate-500">読み込んだノートをどのチャンネルに保存しますか？</p>
-            <select id="import-channel-select" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                <!-- JavaScriptで生成 -->
-            </select>
-            <div class="grid grid-cols-2 gap-3 pt-2">
-                <button onclick="closeImportModal()" class="py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-200 transition-colors">キャンセル</button>
-                <button onclick="confirmImport()" class="py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow hover:bg-emerald-700 transition-colors">読み込み実行</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-full shadow-2xl opacity-0 transition-all pointer-events-none z-[100] whitespace-nowrap">Notification</div>
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
             <h3 class="font-bold text-lg text-slate-800">ノートを編集</h3>
@@ -202,23 +165,309 @@
         </div>
     </div>
 
-    <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex flex-col items-center justify-center text-white gap-3">
-        <div class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-        <p class="text-xs font-bold uppercase tracking-widest">AI Processing...</p>
-    </div>
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-full shadow-2xl opacity-0 transition-all pointer-events-none z-[100] whitespace-nowrap">Notification</div>
 
     <script>
         const NOTES_KEY = 'rb_relay_notes_v2';
         const QUIZZES_KEY = 'rb_relay_quizzes_v2';
         const API_KEY_STORAGE_KEY = 'google_ai_api_key';
         const CHANNEL_KEY = 'rb_relay_channel';
-        const CHANNEL_NAMES_KEY = 'rb_relay_channel_names';
         
         let notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
         let quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]');
-        let channelNames = JSON.parse(localStorage.getItem(CHANNEL_NAMES_KEY) || '{"1":"チャンネル 1","2":"チャンネル 2","3":"チャンネル 3"}');
-        let currentChannel = localStorage.getItem(CHANNEL_KEY) || '1';
+        let currentIdx = -1;
         let isRecording = false;
-        let noteIdToEd
-(Content truncated due to size limit. Use line ranges to read remaining content)
+        let noteIdToEdit = null;
+        let currentChannel = localStorage.getItem(CHANNEL_KEY) || '1';
+
+        // (音声認識コードは変更なし)
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let rec = null;
+        let currentSessionText = ""; 
+        if (SpeechRec) {
+            rec = new SpeechRec();
+            rec.lang = 'ja-JP';
+            rec.continuous = false; 
+            rec.interimResults = true;
+            rec.onresult = (event) => {
+                let interim = "", finalTrans = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const t = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) { finalTrans += t; } else { interim += t; }
+                }
+                if (finalTrans) { currentSessionText += finalTrans; }
+                const overlay = document.getElementById('interim-overlay');
+                if (interim) {
+                    overlay.textContent = interim;
+                    overlay.classList.remove('opacity-0');
+                } else {
+                    overlay.classList.add('opacity-0');
+                }
+            };
+            rec.onend = () => {
+                if (currentSessionText.trim()) { appendToMainArea(currentSessionText); currentSessionText = ""; }
+                if (isRecording) {
+                    updateMicStatus("Refreshing...");
+                    setTimeout(() => { if (isRecording) { try { rec.start(); updateMicUI(true); } catch(e) { console.error("Restart error:", e); } } }, 300);
+                } else {
+                    updateMicUI(false);
+                    document.getElementById('interim-overlay').classList.add('opacity-0');
+                }
+            };
+            rec.onerror = (e) => {
+                console.error("Mic Error:", e.error);
+                if (e.error === 'no-speech') { return; }
+                stopRec();
+                toast("エラー: " + e.error);
+            };
+        }
+
+        function appendToMainArea(text) {
+            const area = document.getElementById('transcript-area');
+            const prefix = (area.value && !area.value.match(/[\n。、]$/)) ? " " : "";
+            area.value += prefix + text;
+            area.scrollTop = area.scrollHeight;
+            handleTextInput();
+        }
+
+        const micBtn = document.getElementById('mic-btn');
+        micBtn.onclick = () => {
+            if(!rec) return toast("このブラウザは対応していません");
+            isRecording ? stopRec() : startRec();
+        };
+
+        function startRec() {
+            isRecording = true;
+            currentSessionText = "";
+            try { rec.start(); } catch(e) {}
+            updateMicUI(true);
+        }
+
+        function stopRec() {
+            isRecording = false;
+            rec.stop();
+            updateMicUI(false);
+        }
+
+        function updateMicUI(active) {
+            const status = document.getElementById('mic-status');
+            if (active) {
+                micBtn.classList.add('mic-active');
+                status.textContent = "Recording...";
+                status.className = "text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse";
+            } else {
+                micBtn.classList.remove('mic-active');
+                status.textContent = "Tap to Record";
+                status.className = "text-[10px] font-bold text-slate-400 uppercase tracking-widest";
+            }
+        }
+
+        function updateMicStatus(msg) {
+             const status = document.getElementById('mic-status');
+             status.textContent = msg;
+             status.className = "text-[10px] font-bold text-indigo-400 uppercase tracking-widest";
+        }
+
+        function clearText() {
+            document.getElementById('transcript-area').value = "";
+            document.getElementById('ai-result').value = "";
+            document.getElementById('ai-preview').classList.add('hidden');
+            handleTextInput();
+        }
+
+        function handleTextInput() {
+            const hasText = document.getElementById('transcript-area').value.trim().length > 0;
+            document.getElementById('ai-process-btn').disabled = !hasText;
+        }
+
+        async function processAI() {
+            const rawText = document.getElementById('transcript-area').value;
+            if (rawText.length < 2) return toast("テキストが短すぎます");
+            setLoading(true);
+            const systemPrompt = `あなたは優秀な編集者です。入力された「話し言葉のメモ」を、学習用の「読みやすい箇条書きノート」に清書（リライト）してください。【編集ルール】1. フィラー削除。2. 話し言葉を断定的な書き言葉に変換。3. 元のメモにない情報は追加しない。4. 重複内容はまとめる。`;
+            try {
+                const res = await callAI(rawText, systemPrompt);
+                document.getElementById('ai-result').value = res.trim();
+                document.getElementById('ai-preview').classList.remove('hidden');
+                setTimeout(() => document.getElementById('ai-preview').scrollIntoView({behavior:'smooth'}), 100);
+                toast("編集完了");
+            } catch (e) { console.error(e); } finally { setLoading(false); }
+        }
+
+        async function generateQuizzes() {
+            const filteredNotes = notes.filter(n => n.channel === currentChannel);
+            if (filteredNotes.length === 0) return toast("このチャンネルにノートがありません");
+            setLoading(true);
+            const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] } - 事実に基づいた問題。日本語出力。`;
+            const content = filteredNotes.map(n => n.content).join("\n---\n");
+            try {
+                const res = await callAI(content, sys, "application/json");
+                const data = JSON.parse(res);
+                quizzes = data.quizzes || [];
+                localStorage.setItem(QUIZZES_KEY, JSON.stringify(quizzes));
+                initQuiz();
+                toast("クイズを更新しました");
+            } catch (e) { console.error(e); } finally { setLoading(false); }
+        }
+
+        async function callAI(prompt, system, mime = "text/plain") {
+            const userApiKey = document.getElementById('api-key-input').value;
+            if (!userApiKey) {
+                toast("APIキーが入力されていません");
+                throw new Error("API Key is missing");
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userApiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: system }] },
+                generationConfig: { responseMimeType: mime }
+            };
+            try {
+                const r = await fetchWithRetry(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ) });
+                const d = await r.json();
+                if(d.error) {
+                    console.error("API Error:", d.error.message);
+                    toast(`APIエラー: ${d.error.message}`);
+                    throw new Error(d.error.message);
+                }
+                return d.candidates[0].content.parts[0].text;
+            } catch (e) {
+                toast("通信エラーが発生しました");
+                throw e;
+            }
+        }
+
+        function saveFinalNote() {
+            const content = document.getElementById('ai-result').value.trim();
+            if (!content) return;
+            notes.unshift({ 
+                id: Date.now(), 
+                content: content, 
+                date: new Date().toLocaleString('ja-JP', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}),
+                channel: currentChannel
+            });
+            localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+            renderNotes();
+            clearText();
+            toast(`チャンネル${currentChannel}に保存しました`);
+        }
+
+        function renderNotes() {
+            const list = document.getElementById('notes-list');
+            list.innerHTML = "";
+            const filteredNotes = notes.filter(n => n.channel === currentChannel);
+            if (filteredNotes.length === 0) {
+                list.innerHTML = `<p class="text-center text-[10px] text-slate-300 py-4">このチャンネルにノートはありません</p>`;
+                return;
+            }
+            filteredNotes.forEach(n => {
+                const d = document.createElement('div');
+                d.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative";
+                d.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] font-black text-slate-300 uppercase">${n.date}</span>
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal(${n.id})" class="text-slate-300 hover:text-indigo-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                            </button>
+                            <button onclick="delNote(${n.id} )" class="text-slate-300 hover:text-red-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">${n.content}</p>
+                `;
+                list.appendChild(d );
+            });
+        }
+
+        function delNote(id) {
+            if(!confirm("このノートを削除しますか？")) return;
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+            renderNotes();
+            toast("ノートを削除しました");
+        }
+
+        function openEditModal(id) {
+            noteIdToEdit = id;
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                document.getElementById('edit-textarea').value = note.content;
+                document.getElementById('edit-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            noteIdToEdit = null;
+        }
+
+        function updateNote() {
+            if (noteIdToEdit === null) return;
+            const newContent = document.getElementById('edit-textarea').value.trim();
+            const noteIndex = notes.findIndex(n => n.id === noteIdToEdit);
+            if (noteIndex > -1 && newContent) {
+                notes[noteIndex].content = newContent;
+                localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+                renderNotes();
+                toast("ノートを更新しました");
+                closeEditModal();
+            } else if (!newContent) {
+                toast("内容が空です");
+            }
+        }
+
+        function handleChannelChange() {
+            const select = document.getElementById('channel-select');
+            currentChannel = select.value;
+            localStorage.setItem(CHANNEL_KEY, currentChannel);
+            renderNotes();
+            toast(`チャンネル ${currentChannel} を表示中`);
+        }
+
+        // ★★★ ここからインポート/エクスポート関数 ★★★
+        function importNotes() {
+            document.getElementById('file-importer').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedNotes = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedNotes)) {
+                        throw new Error("ファイル形式が正しくありません。");
+                    }
+
+                    let addedCount = 0;
+                    let skippedCount = 0;
+                    const existingIds = new Set(notes.map(n => n.id));
+
+                    importedNotes.forEach(importedNote => {
+                        // 必須プロパティのチェック
+                        if (importedNote.id && importedNote.content) {
+                            if (!existingIds.has(importedNote.id)) {
+                                // チャンネル情報がない古いデータの場合、現在のチャンネルを付与
+                                if (!importedNote.channel) {
+                                    importedNote.channel = currentChannel;
+                                }
+                                notes.push(importedNote);
+                                addedCount++;
+                            } else {
+                                skippedCount++;
+                            }
+                        }
+                    });
+
+                    if (addedCount > 0) {
+                        // 日付でソートして最新のものが上に来るようにする
+                        notes.sort((a, b) => b.id - a.id);
+                        localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+                        renderNotes();
+                    }
+                    toast(`${addedCount}件のノートを読み込みました。（${skippedCount}件は重複のためスキップ）`);
+
+                } catch (error
