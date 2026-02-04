@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieval Booster - インポート機能付き</title>
+    <title>Retrieval Booster - チャンネル機能付き</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap' );
@@ -22,6 +22,7 @@
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+        /* Select矢印のカスタム */
         select {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -98,6 +99,7 @@
             <div class="space-y-3 pt-6 border-t border-slate-200">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-700">保存済みノート</h3>
+                    <!-- ★★★ チャンネル選択UIを追加 ★★★ -->
                     <select id="channel-select" onchange="handleChannelChange()" class="text-xs font-bold bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none">
                         <option value="1">チャンネル 1 (趣味)</option>
                         <option value="2">チャンネル 2 (仕事)</option>
@@ -106,22 +108,11 @@
                         <option value="5">チャンネル 5</option>
                     </select>
                 </div>
-                <!-- ★★★ インポート/エクスポートUIを修正 ★★★ -->
-                <div class="flex items-center gap-2">
-                    <button onclick="importNotes()" class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                        ファイル読み込み (JSON )
-                    </button>
-                    <button onclick="exportNotes()" class="flex-1 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                        ファイル書き出し (JSON )
-                    </button>
-                    <input type="file" id="file-importer" class="hidden" accept=".json" onchange="handleFileSelect(event)">
-                </div>
                 <div id="notes-list" class="space-y-3"></div>
             </div>
         </section>
 
+        <!-- (クイズセクションは変更なし) -->
         <section id="section-quiz" class="hidden space-y-5">
             <div class="bg-gradient-to-br from-indigo-600 to-violet-600 p-6 rounded-3xl text-white shadow-lg">
                 <h2 class="font-bold text-lg">リトリーバル・クイズ</h2>
@@ -149,6 +140,7 @@
 
     </main>
 
+    <!-- (ローダー、トースト、編集モーダルは変更なし) -->
     <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex flex-col items-center justify-center text-white gap-3">
         <div class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
         <p class="text-xs font-bold uppercase tracking-widest">AI Processing...</p>
@@ -170,14 +162,14 @@
         const NOTES_KEY = 'rb_relay_notes_v2';
         const QUIZZES_KEY = 'rb_relay_quizzes_v2';
         const API_KEY_STORAGE_KEY = 'google_ai_api_key';
-        const CHANNEL_KEY = 'rb_relay_channel';
+        const CHANNEL_KEY = 'rb_relay_channel'; // ★★★ チャンネル保存用のキー ★★★
         
         let notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
         let quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]');
         let currentIdx = -1;
         let isRecording = false;
         let noteIdToEdit = null;
-        let currentChannel = localStorage.getItem(CHANNEL_KEY) || '1';
+        let currentChannel = localStorage.getItem(CHANNEL_KEY) || '1'; // ★★★ 現在のチャンネルを管理 ★★★
 
         // (音声認識コードは変更なし)
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -294,7 +286,7 @@
         }
 
         async function generateQuizzes() {
-            const filteredNotes = notes.filter(n => n.channel === currentChannel);
+            const filteredNotes = notes.filter(n => n.channel === currentChannel); // ★★★ 現在のチャンネルのノートのみ対象 ★★★
             if (filteredNotes.length === 0) return toast("このチャンネルにノートがありません");
             setLoading(true);
             const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] } - 事実に基づいた問題。日本語出力。`;
@@ -336,6 +328,7 @@
             }
         }
 
+        // ★★★ saveFinalNote関数を修正 ★★★
         function saveFinalNote() {
             const content = document.getElementById('ai-result').value.trim();
             if (!content) return;
@@ -343,7 +336,7 @@
                 id: Date.now(), 
                 content: content, 
                 date: new Date().toLocaleString('ja-JP', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}),
-                channel: currentChannel
+                channel: currentChannel // チャンネル情報を追加
             });
             localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
             renderNotes();
@@ -351,10 +344,13 @@
             toast(`チャンネル${currentChannel}に保存しました`);
         }
 
+        // ★★★ renderNotes関数を修正 ★★★
         function renderNotes() {
             const list = document.getElementById('notes-list');
             list.innerHTML = "";
+            // 現在のチャンネルに一致するノートだけをフィルタリング
             const filteredNotes = notes.filter(n => n.channel === currentChannel);
+
             if (filteredNotes.length === 0) {
                 list.innerHTML = `<p class="text-center text-[10px] text-slate-300 py-4">このチャンネルにノートはありません</p>`;
                 return;
@@ -417,57 +413,80 @@
             }
         }
 
+        // ★★★ チャンネル変更を処理する関数を追加 ★★★
         function handleChannelChange() {
             const select = document.getElementById('channel-select');
             currentChannel = select.value;
-            localStorage.setItem(CHANNEL_KEY, currentChannel);
-            renderNotes();
+            localStorage.setItem(CHANNEL_KEY, currentChannel); // 変更を保存
+            renderNotes(); // ノートを再描画
             toast(`チャンネル ${currentChannel} を表示中`);
         }
 
-        // ★★★ ここからインポート/エクスポート関数 ★★★
-        function importNotes() {
-            document.getElementById('file-importer').click();
+        // (以降の関数は変更なし)
+        function exportNotes() {
+            if (notes.length === 0) return toast("書き出すデータがありません");
+            const dataStr = JSON.stringify(notes, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const date = new Date();
+            const dateStr = date.getFullYear() + ('0' + (date.getMonth() + 1)).slice(-2) + ('0' + date.getDate()).slice(-2);
+            const fileName = `retrieval_booster_notes_${dateStr}.json`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast("ファイルを保存しました");
         }
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function initQuiz() {
+            const filteredNotes = notes.filter(n => n.channel === currentChannel);
+            const active = document.getElementById('quiz-content');
+            const empty = document.getElementById('quiz-empty');
+            if (filteredNotes.length === 0) {
+                active.classList.add('hidden');
+                empty.classList.remove('hidden');
+            } else {
+                active.classList.remove('hidden');
+                empty.classList.add('hidden');
+                quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]'); // クイズデータはチャンネルごとではないので全体から
+                currentIdx = Math.floor(Math.random() * quizzes.length);
+                if(quizzes.length > 0) showQuiz();
+            }
+        }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedNotes = JSON.parse(e.target.result);
-                    if (!Array.isArray(importedNotes)) {
-                        throw new Error("ファイル形式が正しくありません。");
-                    }
+        function showQuiz() {
+            const q = quizzes[currentIdx];
+            document.getElementById('q-text').textContent = q.question;
+            document.getElementById('a-text').textContent = q.answer;
+            document.getElementById('a-box').classList.add('hidden');
+            document.getElementById('ans-btn').classList.remove('hidden');
+        }
 
-                    let addedCount = 0;
-                    let skippedCount = 0;
-                    const existingIds = new Set(notes.map(n => n.id));
+        function showAnswer() {
+            document.getElementById('a-box').classList.remove('hidden');
+            document.getElementById('ans-btn').classList.add('hidden');
+        }
 
-                    importedNotes.forEach(importedNote => {
-                        // 必須プロパティのチェック
-                        if (importedNote.id && importedNote.content) {
-                            if (!existingIds.has(importedNote.id)) {
-                                // チャンネル情報がない古いデータの場合、現在のチャンネルを付与
-                                if (!importedNote.channel) {
-                                    importedNote.channel = currentChannel;
-                                }
-                                notes.push(importedNote);
-                                addedCount++;
-                            } else {
-                                skippedCount++;
-                            }
-                        }
-                    });
+        function nextQuiz() {
+            if (quizzes.length > 1) {
+                let ni;
+                do { ni = Math.floor(Math.random() * quizzes.length); } while(ni === currentIdx);
+                currentIdx = ni;
+            }
+            showQuiz();
+        }
 
-                    if (addedCount > 0) {
-                        // 日付でソートして最新のものが上に来るようにする
-                        notes.sort((a, b) => b.id - a.id);
-                        localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-                        renderNotes();
-                    }
-                    toast(`${addedCount}件のノートを読み込みました。（${skippedCount}件は重複のためスキップ）`);
-
-                } catch (error
+        function switchTab(t) {
+            const isInput = t === 'input';
+            document.getElementById('section-input').classList.toggle('hidden', !isInput);
+            document.getElementById('section-quiz').classList.toggle('hidden', isInput);
+            const b1 = document.getElementById('tab-input'), b2 = document.getElementById('tab-quiz');
+            if (isInput) {
+                b1.className = "py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-900 transition-all flex-1";
+                b2.className = "py-2.5 text-xs font-bold rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white/50 transition-all flex-1";
+            } else {
+                b2.className = "py-2.5 text-xs font-bold rounded-lg bg-white shadow-sm text-indigo-900 transition-all flex-1";
+                b1.className =
