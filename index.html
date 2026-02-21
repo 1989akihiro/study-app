@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学習記録アプリ</title>
+    <title>Retrieval Booster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
@@ -65,27 +65,20 @@
             </div>
 
             <div class="pt-4 border-t border-slate-200 space-y-4">
-
-                <!-- 要約の文数スライダー -->
                 <div class="space-y-2 pb-2">
-                    <div class="flex justify-between items-center">
-                        <label for="summary-count" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">要約の文数</label>
-                        <span id="summary-count-label" class="text-xs font-bold text-indigo-600">3 文</span>
-                    </div>
-                    <input type="range" id="summary-count" min="1" max="10" value="3"
-                        oninput="document.getElementById('summary-count-label').textContent = this.value + ' 文'"
-                        class="w-full accent-indigo-600">
-                    <p class="text-[10px] text-slate-400">重要度の高い文を指定した数だけ抽出してノートを作成します。</p>
+                    <label for="api-key-input" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Google AI API Key</label>
+                    <input type="password" id="api-key-input" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ここにGoogle AIのAPIキーを貼り付け">
+                    <p class="text-[10px] text-slate-400">APIキーはブラウザ内にのみ保存されます。</p>
                 </div>
 
-                <button id="ai-process-btn" onclick="processSummary()" disabled class="w-full py-4 bg-slate-800 text-white font-bold rounded-2xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group">
-                    <span class="group-hover:scale-105 transition-transform">要約してノートを作成</span>
+                <button id="ai-process-btn" onclick="processAI()" disabled class="w-full py-4 bg-slate-800 text-white font-bold rounded-2xl shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group">
+                    <span class="group-hover:scale-105 transition-transform">AIで清書してノートを作成</span>
                 </button>
 
                 <div id="ai-preview" class="hidden space-y-3 animate-in fade-in slide-in-from-bottom-2">
                     <div class="flex items-center gap-2">
                         <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
-                        <label class="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Extracted Summary</label>
+                        <label class="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Refined Note</label>
                     </div>
                     <textarea id="ai-result" rows="5" class="w-full p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-sm leading-relaxed text-slate-700 outline-none"></textarea>
                     <button onclick="saveFinalNote()" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow hover:bg-indigo-700 transition-colors">この内容で保存</button>
@@ -95,17 +88,17 @@
             <div class="space-y-3 pt-6 border-t border-slate-200">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-700">保存済みノート</h3>
-                    <div class="flex gap-2">
-                        <!-- インポートボタン（隠しinputと連動） -->
+                    <div class="flex items-center gap-2">
+                        <!-- JSONアップロードボタン -->
                         <label for="import-file-input" class="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full hover:bg-emerald-100 transition-colors cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                             JSON読み込み
                         </label>
                         <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importNotes(event)">
-                        <!-- エクスポートボタン -->
+                        <!-- JSONエクスポートボタン -->
                         <button onclick="exportNotes()" class="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            ファイル書き出し(JSON)
+                            JSON書き出し
                         </button>
                     </div>
                 </div>
@@ -144,6 +137,10 @@
 
     </main>
 
+    <div id="loader" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex flex-col items-center justify-center text-white gap-3">
+        <div class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-bold uppercase tracking-widest">AI Processing...</p>
+    </div>
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-slate-800 text-white text-xs font-bold rounded-full shadow-2xl opacity-0 transition-all pointer-events-none z-[100] whitespace-nowrap">Notification</div>
 
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
@@ -157,130 +154,31 @@
         </div>
     </div>
 
+    <!-- JSONインポート確認モーダル -->
+    <div id="import-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
+            <h3 class="font-bold text-lg text-slate-800">JSONファイルの読み込み</h3>
+            <p class="text-sm text-slate-600" id="import-modal-desc"></p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeImportModal()" class="py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm hover:bg-slate-200 transition-colors">キャンセル</button>
+                <button onclick="confirmImport('merge')" class="py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow hover:bg-emerald-700 transition-colors">追加で読み込む</button>
+            </div>
+            <button onclick="confirmImport('overwrite')" class="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-sm shadow hover:bg-red-600 transition-colors">既存データを上書きする</button>
+        </div>
+    </div>
+
+
     <script>
         const NOTES_KEY = 'rb_relay_notes_v2';
         const QUIZZES_KEY = 'rb_relay_quizzes_v2';
+        const API_KEY_STORAGE_KEY = 'google_ai_api_key';
 
         let notes = JSON.parse(localStorage.getItem(NOTES_KEY) || '[]');
         let quizzes = JSON.parse(localStorage.getItem(QUIZZES_KEY) || '[]');
         let currentIdx = -1;
         let isRecording = false;
         let noteIdToEdit = null;
-
-        // =============================================
-        // 抽出型要約エンジン（TF-IDF ベース）
-        // =============================================
-
-        // 日本語のストップワード（要約スコアに影響しない一般的な語）
-        const STOP_WORDS = new Set([
-            'の','に','は','を','た','が','で','て','と','し','れ','さ','ある','いる','も','する','から',
-            'な','こと','として','い','や','れる','など','なり','ない','この','ため','その','あっ','よう',
-            'また','もの','という','あり','まず','ます','です','ました','ません','でした','について',
-            'という','ところ','ので','ば','ながら','ように','ことが','ことを','ことは','それ','これ',
-            'あの','どの','そう','こう','ああ','まあ','えー','あー','うー','んー','ちょっと','やっぱり',
-            'やっぱ','なんか','なんで','なんと','でも','だけど','けど','けれど','しかし','ただ','ただし',
-            'つまり','すなわち','いわゆる','いわば','いずれ','いずれも','ところで','ちなみに','さて',
-            'では','じゃ','じゃあ','あと','あとは','それと','それから','そして','そこで','そのため',
-            'そのほか','そのうえ','そのまま','そのもの','そのよう','そういう','そういった','そういえば'
-        ]);
-
-        /**
-         * テキストを文単位に分割する
-         * 句点・感嘆符・疑問符・改行を区切りとして扱う
-         */
-        function splitSentences(text) {
-            // 改行を句点に統一してから分割
-            const normalized = text.replace(/\n+/g, '。');
-            const raw = normalized.split(/(?<=[。！？\.\!\?])/);
-            return raw
-                .map(s => s.trim())
-                .filter(s => s.length > 3); // 極端に短い断片は除外
-        }
-
-        /**
-         * テキストを単語（2文字以上のひらがな・カタカナ・漢字・英数字）に分割する
-         * 形態素解析なしで動作する簡易トークナイザー
-         */
-        function tokenize(text) {
-            const tokens = [];
-            // 漢字・カタカナ・英数字の連続を単語として抽出
-            const matches = text.match(/[一-龯ァ-ヶA-Za-z0-9ａ-ｚＡ-Ｚ０-９]{2,}/g);
-            if (matches) {
-                matches.forEach(m => {
-                    if (!STOP_WORDS.has(m)) tokens.push(m);
-                });
-            }
-            return tokens;
-        }
-
-        /**
-         * 単語の出現頻度マップを生成する
-         */
-        function buildFreqMap(sentences) {
-            const freq = {};
-            sentences.forEach(s => {
-                tokenize(s).forEach(w => {
-                    freq[w] = (freq[w] || 0) + 1;
-                });
-            });
-            return freq;
-        }
-
-        /**
-         * 各文のスコアを計算する
-         * スコア = 文中の単語頻度の合計 + 位置ボーナス（冒頭・末尾は重要）
-         */
-        function scoreSentences(sentences, freqMap) {
-            const total = sentences.length;
-            return sentences.map((s, i) => {
-                const words = tokenize(s);
-                if (words.length === 0) return { sentence: s, score: 0, index: i };
-
-                // 単語頻度スコア（文の長さで正規化）
-                const freqScore = words.reduce((sum, w) => sum + (freqMap[w] || 0), 0) / words.length;
-
-                // 位置ボーナス：冒頭と末尾の文を優遇
-                let posBonus = 0;
-                if (i === 0 || i === total - 1) posBonus = 0.5;
-                else if (i <= 2 || i >= total - 3) posBonus = 0.2;
-
-                // 文の長さペナルティ：極端に短い文は重要度を下げる
-                const lengthPenalty = s.length < 10 ? -0.3 : 0;
-
-                return { sentence: s, score: freqScore + posBonus + lengthPenalty, index: i };
-            });
-        }
-
-        /**
-         * メインの要約関数
-         * @param {string} text - 要約対象のテキスト
-         * @param {number} n    - 抽出する文の数
-         * @returns {string}    - 箇条書き形式の要約テキスト
-         */
-        function extractiveSummarize(text, n) {
-            const sentences = splitSentences(text);
-            if (sentences.length === 0) return "";
-            if (sentences.length <= n) {
-                // 文数が指定以下なら全文を箇条書きに変換
-                return sentences.map(s => '・' + s.replace(/[。]$/, '')).join('\n');
-            }
-
-            const freqMap = buildFreqMap(sentences);
-            const scored = scoreSentences(sentences, freqMap);
-
-            // スコア上位N文を選択し、元の順序に並べ直す
-            const topN = scored
-                .slice()
-                .sort((a, b) => b.score - a.score)
-                .slice(0, n)
-                .sort((a, b) => a.index - b.index);
-
-            return topN.map(item => '・' + item.sentence.replace(/[。]$/, '')).join('\n');
-        }
-
-        // =============================================
-        // UI ロジック
-        // =============================================
+        let pendingImportData = null; // インポート確認待ちデータ
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let rec = null;
@@ -392,22 +290,71 @@
             document.getElementById('ai-process-btn').disabled = !hasText;
         }
 
-        /**
-         * 要約処理のエントリーポイント（旧 processAI に相当）
-         */
-        function processSummary() {
+        async function processAI() {
             const rawText = document.getElementById('transcript-area').value;
-            if (rawText.trim().length < 5) return toast("テキストが短すぎます");
+            if (rawText.length < 2) return toast("テキストが短すぎます");
+            setLoading(true);
+            const systemPrompt = `あなたは優秀な編集者です。入力された「話し言葉のメモ」を、学習用の「読みやすい箇条書きノート」に清書（リライト）してください。【編集ルール】1. フィラー削除。2. 話し言葉を断定的な書き言葉に変換。3. 元のメモにない情報は追加しない。4. 重複内容はまとめる。`;
+            try {
+                const res = await callAI(rawText, systemPrompt);
+                document.getElementById('ai-result').value = res.trim();
+                document.getElementById('ai-preview').classList.remove('hidden');
+                setTimeout(() => document.getElementById('ai-preview').scrollIntoView({ behavior: 'smooth' }), 100);
+                toast("編集完了");
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        }
 
-            const n = parseInt(document.getElementById('summary-count').value, 10);
-            const result = extractiveSummarize(rawText, n);
+        async function generateQuizzes() {
+            if (notes.length === 0) return toast("ノートがありません");
+            setLoading(true);
+            const sys = `学習ノートからリトリーバル（想起）練習用クイズを作成してください。JSON形式: { "quizzes": [{ "question": "問題文", "answer": "解答の要点" }] } - 事実に基づいた問題。日本語出力。`;
+            const content = notes.map(n => n.content).join("\n---\n");
+            try {
+                const res = await callAI(content, sys, "application/json");
+                const data = JSON.parse(res);
+                quizzes = data.quizzes || [];
+                localStorage.setItem(QUIZZES_KEY, JSON.stringify(quizzes));
+                initQuiz();
+                toast("クイズを更新しました");
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        }
 
-            if (!result) return toast("要約できるテキストがありません");
-
-            document.getElementById('ai-result').value = result;
-            document.getElementById('ai-preview').classList.remove('hidden');
-            setTimeout(() => document.getElementById('ai-preview').scrollIntoView({ behavior: 'smooth' }), 100);
-            toast("要約完了");
+        async function callAI(prompt, system, mime = "text/plain") {
+            const userApiKey = document.getElementById('api-key-input').value;
+            if (!userApiKey) {
+                toast("APIキーが入力されていません");
+                throw new Error("API Key is missing");
+            }
+            // ★ 修正: gemini-2.5-flash（安定版）に変更
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${userApiKey}`;
+            const body = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: system }] },
+                generationConfig: { responseMimeType: mime }
+            };
+            try {
+                const r = await fetchWithRetry(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                const d = await r.json();
+                if (d.error) {
+                    console.error("API Error:", d.error.message);
+                    toast(`APIエラー: ${d.error.message}`);
+                    throw new Error(d.error.message);
+                }
+                return d.candidates[0].content.parts[0].text;
+            } catch (e) {
+                if (!e.message.startsWith("APIエラー")) {
+                    toast("通信エラーが発生しました");
+                }
+                throw e;
+            }
         }
 
         function saveFinalNote() {
@@ -489,58 +436,7 @@
             }
         }
 
-        /**
-         * JSONファイルからノートをインポートする
-         * 既存データとの重複（id一致）はスキップし、新規分のみ追加する
-         */
-        function importNotes(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const imported = JSON.parse(e.target.result);
-
-                    // 配列形式かどうか検証
-                    if (!Array.isArray(imported)) {
-                        return toast("形式が正しくありません");
-                    }
-
-                    // 必須フィールドの簡易チェック
-                    const valid = imported.filter(n =>
-                        n && typeof n.id !== 'undefined' && typeof n.content === 'string'
-                    );
-
-                    if (valid.length === 0) {
-                        return toast("読み込めるノートがありません");
-                    }
-
-                    // 既存ノートのIDセットを作成して重複を除外
-                    const existingIds = new Set(notes.map(n => n.id));
-                    const newNotes = valid.filter(n => !existingIds.has(n.id));
-
-                    if (newNotes.length === 0) {
-                        return toast("すべて既存のデータと重複しています");
-                    }
-
-                    // 新規ノートを先頭に追加（インポート分を上に表示）
-                    notes = [...newNotes, ...notes];
-                    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-                    renderNotes();
-                    toast(`${newNotes.length} 件のノートを読み込みました`);
-
-                } catch (err) {
-                    console.error(err);
-                    toast("JSONの読み込みに失敗しました");
-                } finally {
-                    // 同じファイルを再選択できるようにリセット
-                    event.target.value = "";
-                }
-            };
-            reader.readAsText(file);
-        }
-
+        // ===== JSONエクスポート =====
         function exportNotes() {
             if (notes.length === 0) return toast("書き出すデータがありません");
             const dataStr = JSON.stringify(notes, null, 2);
@@ -559,82 +455,58 @@
             toast("ファイルを保存しました");
         }
 
-        // =============================================
-        // クイズ機能（内容確認型 + 重要度スコア優先出題）
-        // =============================================
+        // ===== JSONインポート =====
+        function importNotes(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            // 同じファイルを再選択できるようinputをリセット
+            event.target.value = "";
 
-        /**
-         * 全ノートの行に重要度スコアを付けてクイズを生成する
-         *
-         * 【重要度スコアの計算方法】
-         *   1. 全ノートを横断して単語の出現頻度マップを作る（複数ノートに登場する語は重要）
-         *   2. 各行の単語頻度合計を行の単語数で割って正規化する（TF-IDF的アプローチ）
-         *   3. スコアに応じた重み付き抽選で出題順を決める（重要行ほど出やすい）
-         */
-        function generateQuizzes() {
-            if (notes.length === 0) return toast("ノートがありません");
-
-            // 全ノートから行を収集し、元のノート情報も保持する
-            const candidates = [];
-            notes.forEach(note => {
-                note.content.split('\n').forEach(line => {
-                    const clean = line.replace(/^[・\-\*\d\.\s]+/, '').trim();
-                    if (clean.length > 5) {
-                        candidates.push({ text: clean, noteDate: note.date });
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    // バリデーション：配列かつ各要素にcontentが存在するか確認
+                    if (!Array.isArray(parsed) || parsed.some(item => typeof item.content === 'undefined')) {
+                        return toast("無効なJSONファイルです");
                     }
-                });
-            });
-
-            if (candidates.length === 0) return toast("クイズを生成できる内容がありません");
-
-            // 全行を横断した単語頻度マップを構築
-            const allTexts = candidates.map(c => c.text);
-            const globalFreqMap = buildFreqMap(allTexts);
-
-            // 各行に重要度スコアを付与
-            const scored = candidates.map(c => {
-                const words = tokenize(c.text);
-                if (words.length === 0) return { ...c, score: 0 };
-                const score = words.reduce((sum, w) => sum + (globalFreqMap[w] || 0), 0) / words.length;
-                return { ...c, score };
-            });
-
-            // スコアを正規化（0〜1の範囲に収める）
-            const maxScore = Math.max(...scored.map(s => s.score), 1);
-            scored.forEach(s => { s.normalizedScore = s.score / maxScore; });
-
-            // 内容確認型の問題を生成
-            // 問題文：「次の内容のポイントは何ですか？」+ ノートの冒頭ヒント
-            // 答え  ：行のテキスト全文
-            quizzes = scored.map(item => {
-                const hint = item.text.length > 20
-                    ? item.text.slice(0, 20) + '…'
-                    : item.text.slice(0, Math.ceil(item.text.length / 2)) + '…';
-                return {
-                    question: `次の内容を詳しく説明してください。\n\n「${hint}」`,
-                    answer: item.text,
-                    weight: 0.2 + item.normalizedScore * 0.8  // 最低0.2、最高1.0の重み
-                };
-            });
-
-            // 重み付きシャッフル（重要度の高い問題が前に来やすい）
-            quizzes = weightedShuffle(quizzes);
-            localStorage.setItem(QUIZZES_KEY, JSON.stringify(quizzes));
-            initQuiz();
-            toast(`${quizzes.length} 問のクイズを更新しました`);
+                    pendingImportData = parsed;
+                    const desc = `「${file.name}」から ${parsed.length} 件のノートが見つかりました。<br>既存の ${notes.length} 件のノートに追加しますか？それとも上書きしますか？`;
+                    document.getElementById('import-modal-desc').innerHTML = desc;
+                    document.getElementById('import-modal').classList.remove('hidden');
+                } catch (err) {
+                    toast("JSONの解析に失敗しました");
+                }
+            };
+            reader.readAsText(file);
         }
 
-        /**
-         * 重み付きシャッフル
-         * 各要素の weight が高いほど前方に配置されやすい
-         */
-        function weightedShuffle(arr) {
-            return arr
-                .map(item => ({ item, key: Math.pow(Math.random(), 1 / (item.weight || 0.5)) }))
-                .sort((a, b) => b.key - a.key)
-                .map(({ item }) => item);
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.add('hidden');
+            pendingImportData = null;
         }
 
+        function confirmImport(mode) {
+            if (!pendingImportData) return;
+            if (mode === 'overwrite') {
+                notes = pendingImportData;
+                toast(`${notes.length} 件のノートで上書きしました`);
+            } else {
+                // 重複ID回避のため、インポートデータのIDを現在時刻ベースで振り直す
+                const offset = Date.now();
+                const imported = pendingImportData.map((item, i) => ({
+                    ...item,
+                    id: offset + i
+                }));
+                notes = [...imported, ...notes];
+                toast(`${imported.length} 件のノートを追加しました`);
+            }
+            localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+            renderNotes();
+            closeImportModal();
+        }
+
+        // ===== クイズ =====
         function initQuiz() {
             const active = document.getElementById('quiz-content');
             const empty = document.getElementById('quiz-empty');
@@ -686,6 +558,8 @@
             }
         }
 
+        function setLoading(s) { document.getElementById('loader').classList.toggle('hidden', !s); }
+
         function toast(m) {
             const t = document.getElementById('toast');
             t.textContent = m;
@@ -693,7 +567,29 @@
             setTimeout(() => t.classList.replace('opacity-100', 'opacity-0'), 2500);
         }
 
+        // ★ 修正: 4xx系エラーはリトライせず即時返却、リトライ回数を3回に削減
+        async function fetchWithRetry(url, opts, retries = 3, d = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const r = await fetch(url, opts);
+                    if (r.ok) return r;
+                    // 認証エラー・モデル廃止など4xx系はリトライ不要
+                    if (r.status >= 400 && r.status < 500) return r;
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                }
+                await new Promise(res => setTimeout(res, d));
+                d *= 2;
+            }
+        }
+
         window.onload = () => {
+            const apiKeyInput = document.getElementById('api-key-input');
+            apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+            apiKeyInput.onchange = () => {
+                localStorage.setItem(API_KEY_STORAGE_KEY, apiKeyInput.value);
+                toast("APIキーを保存しました");
+            };
             renderNotes();
             handleTextInput();
         };
