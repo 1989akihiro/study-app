@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retrieval Booster - 編集機能付き</title>
+    <title>学習記録アプリ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
@@ -560,43 +560,79 @@
         }
 
         // =============================================
-        // クイズ機能（保存済みノートから抽出型で生成）
+        // クイズ機能（内容確認型 + 重要度スコア優先出題）
         // =============================================
 
         /**
-         * 保存済みノートの箇条書き行をシャッフルしてクイズを生成する
-         * 各行を「問題文（穴埋め）」と「答え」のペアに変換する
+         * 全ノートの行に重要度スコアを付けてクイズを生成する
+         *
+         * 【重要度スコアの計算方法】
+         *   1. 全ノートを横断して単語の出現頻度マップを作る（複数ノートに登場する語は重要）
+         *   2. 各行の単語頻度合計を行の単語数で割って正規化する（TF-IDF的アプローチ）
+         *   3. スコアに応じた重み付き抽選で出題順を決める（重要行ほど出やすい）
          */
         function generateQuizzes() {
             if (notes.length === 0) return toast("ノートがありません");
 
-            const lines = [];
-            notes.forEach(n => {
-                n.content.split('\n').forEach(line => {
+            // 全ノートから行を収集し、元のノート情報も保持する
+            const candidates = [];
+            notes.forEach(note => {
+                note.content.split('\n').forEach(line => {
                     const clean = line.replace(/^[・\-\*\d\.\s]+/, '').trim();
-                    if (clean.length > 5) lines.push(clean);
+                    if (clean.length > 5) {
+                        candidates.push({ text: clean, noteDate: note.date });
+                    }
                 });
             });
 
-            if (lines.length === 0) return toast("クイズを生成できる内容がありません");
+            if (candidates.length === 0) return toast("クイズを生成できる内容がありません");
 
-            // 各行から重要語を抜き出して穴埋め問題を作る
-            quizzes = lines.map(line => {
-                const words = tokenize(line).filter(w => w.length >= 2);
-                if (words.length === 0) {
-                    return { question: `次の内容を思い出してください：「${line.slice(0, 15)}…」`, answer: line };
-                }
-                // 最も長い単語をキーワードとして穴埋め対象にする
-                const keyword = words.reduce((a, b) => a.length >= b.length ? a : b);
-                const question = line.replace(keyword, '【　　　】');
-                return { question: `次の空欄に入る言葉は？\n「${question}」`, answer: keyword };
+            // 全行を横断した単語頻度マップを構築
+            const allTexts = candidates.map(c => c.text);
+            const globalFreqMap = buildFreqMap(allTexts);
+
+            // 各行に重要度スコアを付与
+            const scored = candidates.map(c => {
+                const words = tokenize(c.text);
+                if (words.length === 0) return { ...c, score: 0 };
+                const score = words.reduce((sum, w) => sum + (globalFreqMap[w] || 0), 0) / words.length;
+                return { ...c, score };
             });
 
-            // シャッフル
-            quizzes = quizzes.sort(() => Math.random() - 0.5);
+            // スコアを正規化（0〜1の範囲に収める）
+            const maxScore = Math.max(...scored.map(s => s.score), 1);
+            scored.forEach(s => { s.normalizedScore = s.score / maxScore; });
+
+            // 内容確認型の問題を生成
+            // 問題文：「次の内容のポイントは何ですか？」+ ノートの冒頭ヒント
+            // 答え  ：行のテキスト全文
+            quizzes = scored.map(item => {
+                const hint = item.text.length > 20
+                    ? item.text.slice(0, 20) + '…'
+                    : item.text.slice(0, Math.ceil(item.text.length / 2)) + '…';
+                return {
+                    question: `次の内容を詳しく説明してください。\n\n「${hint}」`,
+                    answer: item.text,
+                    weight: 0.2 + item.normalizedScore * 0.8  // 最低0.2、最高1.0の重み
+                };
+            });
+
+            // 重み付きシャッフル（重要度の高い問題が前に来やすい）
+            quizzes = weightedShuffle(quizzes);
             localStorage.setItem(QUIZZES_KEY, JSON.stringify(quizzes));
             initQuiz();
-            toast("クイズを更新しました");
+            toast(`${quizzes.length} 問のクイズを更新しました`);
+        }
+
+        /**
+         * 重み付きシャッフル
+         * 各要素の weight が高いほど前方に配置されやすい
+         */
+        function weightedShuffle(arr) {
+            return arr
+                .map(item => ({ item, key: Math.pow(Math.random(), 1 / (item.weight || 0.5)) }))
+                .sort((a, b) => b.key - a.key)
+                .map(({ item }) => item);
         }
 
         function initQuiz() {
